@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+</head>
+
+<body>
+  <div>
+    <form method="POST" action="/">
+      <label>Name</label><input name="name" type="text" value="" />
+      <label>Address</label><input name="address" type="text" value="" />
+      <input type="submit" value="submit" />
+    </form>
+  </div>
+  <div>
+    <form action="/artifacts" method="post" enctype="multipart/form-data">
+      <label for="file">Filename:</label>
+      <input type="file" name="file" id="file"><br>
+      <input type="submit" name="submit" value="Submit">
+    </form>
+  </div>
+</body>
+
+</html>
