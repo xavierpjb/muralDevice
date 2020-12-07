@@ -6,7 +6,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/spf13/afero"
 )
+
+var AppFS = afero.NewOsFs()
 
 func main() {
 	http.HandleFunc("/artifacts", artifacts)
@@ -28,7 +32,7 @@ func artifacts(w http.ResponseWriter, r *http.Request) {
 		defer in.Close()
 		//you probably want to make sure header.Filename is unique and
 		// use filepath.Join to put it somewhere else.
-		out, err := os.OpenFile(header.Filename, os.O_WRONLY|os.O_CREATE, 0644)
+		out, err := AppFS.OpenFile(header.Filename, os.O_WRONLY|os.O_CREATE, 0644)
 		if err != nil {
 			//handle error
 			fmt.Println("err in readfile")
