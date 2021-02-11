@@ -7,13 +7,13 @@ import (
 	"fmt"
 	"net/http"
 
-	arti "artifact"
+	artifact "artifact"
 
 	"github.com/spf13/afero"
 )
 
 func main() {
-	artifactHandler := arti.New(afero.NewOsFs())
+	artifactHandler := artifact.New(afero.NewOsFs())
 
 	http.HandleFunc("/artifacts", artifactHandler.HandleArtifacts)
 	http.HandleFunc("/", getterPoster)

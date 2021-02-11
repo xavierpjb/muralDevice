@@ -1,16 +1,3 @@
-// package uploader
-
-// import (
-// 	"os"
-// 	"net/http"
-// )
-
-// type FSWriter struct {
-// 	fileSystem os.
-// }
-
-//Create a struct which has a fs and operate on that filesystem
-
 package artifact
 
 import (
@@ -23,15 +10,18 @@ import (
 	"github.com/spf13/afero"
 )
 
+// Artifact base constructor for construtor to fs
 type Artifact struct {
 	fileSystem afero.Fs
 }
 
+// New instantiates an artifact with passed in fs
 func New(fileSystem afero.Fs) Artifact {
 	a := Artifact{fileSystem}
 	return a
 }
 
+// HandleArtifacts is used for processing the artifact upload endpoint
 func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
