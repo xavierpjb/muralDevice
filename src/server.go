@@ -1,53 +1,28 @@
 package main
 
+// Create a new package which can proved artifact methods
+// Package no longer imported properly after removing go.mod file
+// checkout golang.org/doc/code.html for further info on packages
 import (
 	"fmt"
-	"io"
-	"log"
 	"net/http"
-	"os"
+
+	arti "artifact"
 
 	"github.com/spf13/afero"
 )
 
-var AppFS = afero.NewOsFs()
-
 func main() {
-	http.HandleFunc("/artifacts", artifacts)
+	artifactHandler := arti.New(afero.NewOsFs())
+
+	http.HandleFunc("/artifacts", artifactHandler.HandleArtifacts)
 	http.HandleFunc("/", getterPoster)
 
 	http.ListenAndServe(":8090", nil)
 }
 
-func artifacts(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		fmt.Fprintf(w, "Get method for artifact not yet setup")
-	case "POST":
-		in, header, err := r.FormFile("file")
-		if err != nil {
-			//handle error
-			log.Fatal(err)
-		}
-		defer in.Close()
-		//you probably want to make sure header.Filename is unique and
-		// use filepath.Join to put it somewhere else.
-		out, err := AppFS.OpenFile(header.Filename, os.O_WRONLY|os.O_CREATE, 0644)
-		if err != nil {
-			//handle error
-			fmt.Println("err in readfile")
-			log.Fatal(err)
-		}
-		defer out.Close()
-		io.Copy(out, in)
-	//do other stuff
-	default:
-		fmt.Fprintf(w, "Sorry, only GET and POST methods are supported.")
-	}
-
-}
-
 func getterPoster(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("get poster called")
 	if r.URL.Path != "/" {
 		http.Error(w, "404 not found.", http.StatusNotFound)
 		return
@@ -55,6 +30,8 @@ func getterPoster(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
+		fmt.Println("get poster called in get method")
+
 		http.ServeFile(w, r, "artifact.html")
 	case "POST":
 		// Call ParseForm() to parse the raw query and update r.PostForm and r.Form.
