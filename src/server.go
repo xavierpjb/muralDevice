@@ -1,8 +1,5 @@
 package main
 
-// Create a new package which can proved artifact methods
-// Package no longer imported properly after removing go.mod file
-// checkout golang.org/doc/code.html for further info on packages
 import (
 	"fmt"
 	"net/http"

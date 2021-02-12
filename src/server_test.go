@@ -2,10 +2,15 @@ package main
 
 import (
 	artifact "artifact"
+	"bytes"
 	"fmt"
+	"io"
+	"log"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -19,12 +24,12 @@ func TestMain(m *testing.M) {
 }
 
 func setupAll() {
-	fmt.Print("setup")
+	fmt.Println("setup")
 
 }
 
 func teardownAll() {
-	fmt.Print("teardown:")
+	fmt.Println("teardown")
 
 }
 func TestGetArtifact(t *testing.T) {
@@ -63,16 +68,73 @@ func TestGetArtifact(t *testing.T) {
 func TestPostArtifact(t *testing.T) {
 	// Setup filesystem to contain image that we want to send
 	// appFS := afero.NewMemMapFs()
+	expectedFileName, expectedFileContent := "fileToUpload", "file content"
+	appFS := afero.NewMemMapFs()
+	afero.WriteFile(appFS, expectedFileName, []byte(expectedFileContent), 0644)
+	// appFS.MkdirAll("artifacts", 0755)
+	fmt.Println("at the artifact post req creation")
+	req := generatePostRequest(appFS, "artifact", "fileToUpload", "file")
+	fmt.Println("after the artifact post req creation")
+	artifactHandler := artifact.New(appFS)
+	root, err := appFS.Open("/")
+	if err != nil {
+		fmt.Println("fuck")
+
+	}
+	fmt.Println("Below is fs")
+	fmt.Println(root.Readdirnames(10))
+	handler := http.HandlerFunc(artifactHandler.HandleArtifacts)
+
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
 
 	// Send the file as its expected from server
+	// Check the status code is what we expect.
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
 
-	// Compare the saved file from server to the saved file from setup
+	fileContent, err := afero.ReadFile(appFS, "../artifacts/"+expectedFileName)
 
-	// Cleanup file (both from server and setup)
+	if string(fileContent) != expectedFileContent {
+		fmt.Print("They're equal")
+		t.Errorf("handler returned unexpected body: got %v want %v",
+			string(fileContent), expectedFileContent)
+	}
 
-	fmt.Print("post artifactfuuuuuuck")
 }
 
 func setupFS() {
 
+}
+
+func generatePostRequest(fs afero.Fs, url string, filename string, filetype string) *http.Request {
+	file, err := fs.Open(filename)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile(filetype, filepath.Base(file.Name()))
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	io.Copy(part, file)
+	writer.Close()
+	request, err := http.NewRequest("POST", url, body)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	request.Header.Add("Content-Type", writer.FormDataContentType())
+	fmt.Println("file found and added to request body")
+
+	return request
 }
