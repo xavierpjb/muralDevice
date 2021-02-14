@@ -1,14 +1,25 @@
 package artifact
 
 import (
+	"bytes"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
-	"io"
+	"image/png"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/spf13/afero"
 )
+
+// ArtifcatModel represent the model to imitate an artifact (file/mp4 etc)
+type ArtifactModel struct {
+	Name string
+	File string
+	Type string
+}
 
 // Artifact base constructor for construtor to fs
 type Artifact struct {
@@ -25,27 +36,50 @@ func New(fileSystem afero.Fs) Artifact {
 func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		fmt.Fprintf(w, "Get method for artifact not yet setup")
+		fmt.Fprintf(w, "Get method for artifact not yet setupss")
 	case "POST":
-		src, header, err := r.FormFile("file")
-		if err != nil {
-			//handle error
-			log.Fatal(err)
+		if r.Body != nil {
+			defer r.Body.Close()
 		}
-		defer src.Close()
-		//you probably want to make sure header.Filename is unique and
-		// use filepath.Join to put it somewhere else.
-		dst, err := a.fileSystem.OpenFile("../artifacts/"+header.Filename, os.O_WRONLY|os.O_CREATE, 0644)
-		if err != nil {
-			//handle error
-			fmt.Println("err in readfile")
-			log.Fatal(err)
+
+		body, readErr := ioutil.ReadAll(r.Body)
+		if readErr != nil {
+			log.Fatal(readErr)
 		}
-		defer dst.Close()
-		io.Copy(dst, src)
-	//do other stuff
+
+		artif := ArtifactModel{}
+		jsonErr := json.Unmarshal(body, &artif)
+		if jsonErr != nil {
+			log.Fatal(jsonErr)
+
+		}
+		a.saveToFs(artif)
+
 	default:
 		fmt.Fprintf(w, "Sorry, only GET and POST methods are supported.")
 	}
 
+}
+
+// Method for getting an artifact model and storing it to fs
+func (a Artifact) saveToFs(entry ArtifactModel) {
+	unbased, err := base64.StdEncoding.DecodeString(entry.File)
+	if err != nil {
+		panic("Cannot decode b64")
+	}
+
+	r := bytes.NewReader(unbased)
+	// Will need to add a factory for handling different file types. Leaving as png for pr
+	im, err := png.Decode(r)
+	if err != nil {
+		panic("Bad png")
+	}
+
+	f, err := a.fileSystem.OpenFile("../artifacts/"+entry.Name, os.O_WRONLY|os.O_CREATE, 0644)
+
+	if err != nil {
+		panic("Cannot open file")
+	}
+
+	png.Encode(f, im)
 }
