@@ -5,16 +5,17 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"image/png"
+	"image/jpeg"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/spf13/afero"
 )
 
-// ArtifcatModel represent the model to imitate an artifact (file/mp4 etc)
+// ArtifactModel represent the model to imitate an artifact (file/mp4 etc)
 type ArtifactModel struct {
 	Name string
 	File string
@@ -70,16 +71,27 @@ func (a Artifact) saveToFs(entry ArtifactModel) {
 
 	r := bytes.NewReader(unbased)
 	// Will need to add a factory for handling different file types. Leaving as png for pr
-	im, err := png.Decode(r)
+	im, err := jpeg.Decode(r)
 	if err != nil {
 		panic("Bad png")
 	}
 
-	f, err := a.fileSystem.OpenFile("../artifacts/"+entry.Name, os.O_WRONLY|os.O_CREATE, 0644)
+	f, err := a.fileSystem.OpenFile("../artifacts/"+genFileName(".jpeg"), os.O_WRONLY|os.O_CREATE, 0644)
 
 	if err != nil {
 		panic("Cannot open file")
 	}
 
-	png.Encode(f, im)
+	err = jpeg.Encode(f, im, &jpeg.Options{Quality: 100})
+	if err != nil {
+		panic("Jpeg conversion unsuccesful")
+	}
+
+	fmt.Println("File stored in filesystem")
+}
+
+func genFileName(ext string) string {
+	currentTime := time.Now().UTC()
+
+	return currentTime.Format("2006-01-02 15:04:05.000000000") + ext
 }
