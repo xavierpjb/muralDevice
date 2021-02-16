@@ -17,7 +17,6 @@ import (
 
 // ArtifactModel represent the model to imitate an artifact (file/mp4 etc)
 type ArtifactModel struct {
-	Name string
 	File string
 	Type string
 }
@@ -37,24 +36,44 @@ func New(fileSystem afero.Fs) Artifact {
 func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		fmt.Fprintf(w, "Get method for artifact not yet setupss")
+		fmt.Fprintf(w, "Get method for artifact not yet setup")
 	case "POST":
-		if r.Body != nil {
-			defer r.Body.Close()
+		// Check for valid JSON Body
+		if r.Body == nil {
+			log.Println("Received an empty body")
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
+		defer r.Body.Close()
 
+		// Read body
 		body, readErr := ioutil.ReadAll(r.Body)
 		if readErr != nil {
-			log.Fatal(readErr)
+			log.Println(readErr)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 
+		// Parse JSON
 		artif := ArtifactModel{}
 		jsonErr := json.Unmarshal(body, &artif)
 		if jsonErr != nil {
-			log.Fatal(jsonErr)
+
+			log.Println("Received Invalid JSON")
+			log.Println(jsonErr)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		// Save artifact to fs
+		fsErr := a.saveToFs(artif)
+		if fsErr != nil {
+			log.Println("Error saving to filesystem")
+			log.Println(fsErr)
+			w.WriteHeader(http.StatusBadRequest)
+			return
 
 		}
-		a.saveToFs(artif)
 
 	default:
 		fmt.Fprintf(w, "Sorry, only GET and POST methods are supported.")
@@ -63,31 +82,31 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 }
 
 // Method for getting an artifact model and storing it to fs
-func (a Artifact) saveToFs(entry ArtifactModel) {
+func (a Artifact) saveToFs(entry ArtifactModel) error {
 	unbased, err := base64.StdEncoding.DecodeString(entry.File)
 	if err != nil {
-		panic("Cannot decode b64")
+		return err
 	}
 
 	r := bytes.NewReader(unbased)
 	// Will need to add a factory for handling different file types. Leaving as png for pr
 	im, err := jpeg.Decode(r)
 	if err != nil {
-		panic("Bad png")
+		return err
 	}
 
 	f, err := a.fileSystem.OpenFile("../artifacts/"+genFileName(".jpeg"), os.O_WRONLY|os.O_CREATE, 0644)
 
 	if err != nil {
-		panic("Cannot open file")
+		return err
 	}
 
 	err = jpeg.Encode(f, im, &jpeg.Options{Quality: 100})
 	if err != nil {
-		panic("Jpeg conversion unsuccesful")
+		return err
 	}
-
-	fmt.Println("File stored in filesystem")
+	log.Println("Saved filed to fs")
+	return nil
 }
 
 func genFileName(ext string) string {
