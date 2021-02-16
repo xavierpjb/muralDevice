@@ -11,7 +11,7 @@ import (
 func main() {
 	artifactHandler := artifact.New(afero.NewOsFs())
 
-	http.HandleFunc("/artifacts", artifactHandler.HandleArtifacts)
+	http.HandleFunc("/artifact", artifactHandler.HandleArtifacts)
 	http.HandleFunc("/", getterPoster)
 
 	http.ListenAndServe(":8090", nil)
