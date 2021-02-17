@@ -4,17 +4,25 @@ import (
 	"net/http"
 
 	"muraldevice/artifact"
+	"muraldevice/mural"
 
 	"github.com/spf13/afero"
 )
 
 func main() {
-	artifactHandler := artifact.New(afero.NewOsFs())
+	fs := afero.NewOsFs()
+	softJSON, err := fs.Open("containerFiles/software.json")
+	if err != nil {
+
+	}
+	muralHandler := mural.New(softJSON)
+	artifactHandler := artifact.New(fs)
 
 	http.HandleFunc("/artifact", artifactHandler.HandleArtifacts)
+	http.HandleFunc("/muralInfo", muralHandler.GetSoftwareSummary)
 	http.HandleFunc("/", getterPoster)
 
-	http.ListenAndServe(":8090", nil)
+	http.ListenAndServe(":42069", nil)
 }
 
 func getterPoster(w http.ResponseWriter, r *http.Request) {
