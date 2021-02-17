@@ -1,4 +1,4 @@
-module artifact
+module muraldevice
 
 go 1.15
 

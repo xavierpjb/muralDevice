@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	artifact "artifact"
+	"muraldevice/artifact"
 
 	"github.com/spf13/afero"
 )
