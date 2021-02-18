@@ -95,7 +95,7 @@ func (a Artifact) saveToFs(entry ArtifactModel) error {
 		return err
 	}
 
-	f, err := a.fileSystem.OpenFile("artifacts/"+genFileName(".jpeg"), os.O_WRONLY|os.O_CREATE, 0644)
+	f, err := a.fileSystem.OpenFile("containerFiles/artifacts/"+genFileName(".jpeg"), os.O_WRONLY|os.O_CREATE, 0644)
 
 	if err != nil {
 		return err

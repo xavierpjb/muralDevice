@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"muraldevice/artifact"
@@ -13,7 +14,7 @@ func main() {
 	fs := afero.NewOsFs()
 	softJSON, err := fs.Open("containerFiles/software.json")
 	if err != nil {
-
+		log.Panic(err)
 	}
 	muralHandler := mural.New(softJSON)
 	artifactHandler := artifact.New(fs)
