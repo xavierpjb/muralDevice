@@ -1,0 +1,40 @@
+version: '3'
+
+services: 
+  mvral:
+    container_name: mvral
+    image: waduphaitian/mural_dev:multi
+    restart: unless-stopped
+    ports: 
+      - 42069:42069
+    volumes: 
+      - ./containerFiles:/containerFiles
+    links:
+      - "mongo"
+    depends_on: 
+      mongo:
+        condition: service_healthy
+
+  mongo:
+    container_name: mongo
+    image: mongo
+    restart: unless-stopped
+    volumes: 
+      - ./containerFiles/db:/data/db
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "echo", "show dbs", "|", "mongo"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  
+  mongo-express:
+    image: mongo-express
+    restart: unless-stopped
+    depends_on: 
+      mongo:
+        condition: service_healthy
+    ports: 
+      - "3001:8081"
+  
