@@ -34,15 +34,15 @@ func (m *MockIArtifactRepositoryHandler) EXPECT() *MockIArtifactRepositoryHandle
 }
 
 // Create mocks base method.
-func (m *MockIArtifactRepositoryHandler) Create() {
+func (m *MockIArtifactRepositoryHandler) Create(arg0 ArtifactRepositoryModel) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Create")
+	m.ctrl.Call(m, "Create", arg0)
 }
 
 // Create indicates an expected call of Create.
-func (mr *MockIArtifactRepositoryHandlerMockRecorder) Create() *gomock.Call {
+func (mr *MockIArtifactRepositoryHandlerMockRecorder) Create(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockIArtifactRepositoryHandler)(nil).Create))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockIArtifactRepositoryHandler)(nil).Create), arg0)
 }
 
 // RetrieveList mocks base method.

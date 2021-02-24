@@ -68,7 +68,7 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Save artifact to fs
-		fsErr := a.saveToFs(artif)
+		fileURL, fileType, fsErr := a.saveToFs(artif)
 		if fsErr != nil {
 			log.Println("Error saving to filesystem")
 			log.Println(fsErr)
@@ -76,7 +76,8 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 			return
 
 		}
-		a.store()
+		artifPersisted := ArtifactRepositoryModel{URL: fileURL, FileType: fileType, UploadDateTime: time.Now()}
+		a.artifactRepositoryHandler.Create(artifPersisted)
 
 	default:
 		fmt.Fprintf(w, "Sorry, only GET and POST methods are supported.")
@@ -85,31 +86,33 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 }
 
 // Method for getting an artifact model and storing it to fs
-func (a Artifact) saveToFs(entry ArtifactModel) error {
+func (a Artifact) saveToFs(entry ArtifactModel) (string, string, error) {
 	unbased, err := base64.StdEncoding.DecodeString(entry.File)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
 	r := bytes.NewReader(unbased)
 	// Will need to add a factory for handling different file types. Leaving as png for pr
 	im, err := jpeg.Decode(r)
 	if err != nil {
-		return err
+		return "", "", err
 	}
+	fileType := ".jpeg"
+	fileURL := genFileName(fileType)
 
-	f, err := a.fileSystem.OpenFile("containerFiles/artifacts/"+genFileName(".jpeg"), os.O_WRONLY|os.O_CREATE, 0644)
+	f, err := a.fileSystem.OpenFile("containerFiles/artifacts/"+fileURL, os.O_WRONLY|os.O_CREATE, 0644)
 
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
 	err = jpeg.Encode(f, im, &jpeg.Options{Quality: 100})
 	if err != nil {
-		return err
+		return "", "", err
 	}
 	log.Println("Saved filed to fs")
-	return nil
+	return fileURL, fileType, nil
 }
 
 func genFileName(ext string) string {
@@ -122,8 +125,4 @@ func (a Artifact) printCollection() {
 	fmt.Println("retrieving list")
 	a.artifactRepositoryHandler.RetrieveList()
 	fmt.Println("done retrieving list")
-}
-
-func (a Artifact) store() {
-	a.artifactRepositoryHandler.Create()
 }
