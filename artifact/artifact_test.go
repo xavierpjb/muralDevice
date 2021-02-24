@@ -73,7 +73,7 @@ func TestGetArtifact(t *testing.T) {
 func TestValidPostArtifact(t *testing.T) {
 	appFS := afero.NewMemMapFs()
 	mockArtiDB := getMockDB(t)
-	mockArtiDB.EXPECT().Create()
+	mockArtiDB.EXPECT().Create(gomock.Any())
 	artifactHandler := New(appFS, mockArtiDB)
 	handler := http.HandlerFunc(artifactHandler.HandleArtifacts)
 

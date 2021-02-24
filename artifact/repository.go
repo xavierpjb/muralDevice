@@ -13,8 +13,15 @@ import (
 )
 
 type IArtifactRepositoryHandler interface {
-	Create()
+	Create(ArtifactRepositoryModel)
 	RetrieveList()
+}
+
+type ArtifactRepositoryModel struct {
+	// ID             primitive.ObjectID `bson: "_id,omitempty"`
+	URL            string    `bson: "url,omitempty"`
+	FileType       string    `bson: "fileType,omitempty"`
+	UploadDateTime time.Time `bson: "uploadDateTime,omitempty"`
 }
 
 type ArtifactRepositoryHandler struct {
@@ -28,11 +35,12 @@ func NewARH(client *mongo.Client) ArtifactRepositoryHandler {
 	return a
 }
 
-func (a ArtifactRepositoryHandler) Create() {
+func (a ArtifactRepositoryHandler) Create(artifactPersisted ArtifactRepositoryModel) {
 	// this will be correctly filled in once feature for creating entry done
-	a.collection.InsertOne(context.TODO(), bson.D{
-		{"keyssss", "an insertion has been made"},
-	})
+	_, err := a.collection.InsertOne(context.TODO(), artifactPersisted)
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func (a ArtifactRepositoryHandler) RetrieveList() {
@@ -50,7 +58,7 @@ func (a ArtifactRepositoryHandler) RetrieveList() {
 }
 
 func Dbdriver() *mongo.Client {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://mongo:27017"))
 	if err != nil {
 		log.Fatal(err)
 	}
