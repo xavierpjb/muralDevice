@@ -9,6 +9,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/spf13/afero"
 )
 
@@ -28,10 +29,18 @@ func teardownAll() {
 	fmt.Println("teardown")
 
 }
+func getMockDB(t *testing.T) *MockIArtifactRepositoryHandler {
+	mockCtrl := gomock.NewController(t)
+	mockObj := NewMockIArtifactRepositoryHandler(mockCtrl)
+	return mockObj
+
+}
 func TestGetArtifact(t *testing.T) {
 	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
 	// pass 'nil' as the third parameter.
-	artifactHandler := New(afero.NewMemMapFs())
+	mockArtiDB := getMockDB(t)
+	mockArtiDB.EXPECT().RetrieveList()
+	artifactHandler := New(afero.NewMemMapFs(), mockArtiDB)
 	req, err := http.NewRequest("GET", "/", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -63,7 +72,9 @@ func TestGetArtifact(t *testing.T) {
 
 func TestValidPostArtifact(t *testing.T) {
 	appFS := afero.NewMemMapFs()
-	artifactHandler := New(appFS)
+	mockArtiDB := getMockDB(t)
+	mockArtiDB.EXPECT().Create()
+	artifactHandler := New(appFS, mockArtiDB)
 	handler := http.HandlerFunc(artifactHandler.HandleArtifacts)
 
 	req := generatePostRequest()
@@ -96,7 +107,7 @@ func generatePostRequest() *http.Request {
 
 func TestInvalidPostArtifact(t *testing.T) {
 	appFS := afero.NewMemMapFs()
-	artifactHandler := New(appFS)
+	artifactHandler := New(appFS, getMockDB(t))
 	handler := http.HandlerFunc(artifactHandler.HandleArtifacts)
 
 	req := generateBadArtiPostRequest()
@@ -130,7 +141,7 @@ func generateBadArtiPostRequest() *http.Request {
 // test for invalid json
 func TestInvalidJson(t *testing.T) {
 	appFS := afero.NewMemMapFs()
-	artifactHandler := New(appFS)
+	artifactHandler := New(appFS, getMockDB(t))
 	handler := http.HandlerFunc(artifactHandler.HandleArtifacts)
 
 	req := generateInvalidJSONPostRequest()

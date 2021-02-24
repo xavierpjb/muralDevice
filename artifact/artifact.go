@@ -2,7 +2,6 @@ package artifact
 
 import (
 	"bytes"
-	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -14,8 +13,6 @@ import (
 	"time"
 
 	"github.com/spf13/afero"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // ArtifactModel represent the model to imitate an artifact (file/mp4 etc)
@@ -26,13 +23,13 @@ type ArtifactModel struct {
 
 // Artifact base constructor for construtor to fs
 type Artifact struct {
-	fileSystem afero.Fs
-	client     mongo.Client
+	fileSystem                afero.Fs
+	artifactRepositoryHandler IArtifactRepositoryHandler
 }
 
 // New instantiates an artifact with passed in fs
-func New(fileSystem afero.Fs, client mongo.Client) Artifact {
-	a := Artifact{fileSystem, client}
+func New(fileSystem afero.Fs, arh IArtifactRepositoryHandler) Artifact {
+	a := Artifact{fileSystem, arh}
 	return a
 }
 
@@ -41,7 +38,7 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		fmt.Fprintf(w, "Get method for artifact not yet setup")
-		a.printDbs()
+		a.printCollection()
 	case "POST":
 		// Check for valid JSON Body
 		if r.Body == nil {
@@ -79,6 +76,7 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 			return
 
 		}
+		a.store()
 
 	default:
 		fmt.Fprintf(w, "Sorry, only GET and POST methods are supported.")
@@ -120,17 +118,12 @@ func genFileName(ext string) string {
 	return currentTime.Format("2006-01-02 15:04:05.000000000") + ext
 }
 
-func (a Artifact) printDbs() {
-	db := a.client.Database("mvral")
-	mvralColl := db.Collection("artifacts")
-	mvralColl.InsertOne(context.TODO(), bson.D{
-		{"keyssss", "an insertion has been made"},
-	})
-	databases, err := a.client.ListDatabaseNames(context.TODO(), bson.M{})
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("databases should be below")
-	fmt.Println(databases)
+func (a Artifact) printCollection() {
+	fmt.Println("retrieving list")
+	a.artifactRepositoryHandler.RetrieveList()
+	fmt.Println("done retrieving list")
+}
 
+func (a Artifact) store() {
+	a.artifactRepositoryHandler.Create()
 }

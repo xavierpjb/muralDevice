@@ -24,18 +24,19 @@ func main() {
 	muralHandler := mural.New(softJSON)
 
 	fmt.Println("will try to connect to db")
-	//clean up connection on application shutdown
-	// https://stackoverflow.com/questions/36432123/how-to-correctly-work-with-mongodb-session-in-go
-	client, context := artifact.Dbdriver()
-	artifactHandler := artifact.New(fs, *client)
+	client := artifact.Dbdriver()
+	arh := artifact.NewARH(client)
+	artifactHandler := artifact.New(fs, arh)
 
 	http.HandleFunc("/artifact", artifactHandler.HandleArtifacts)
 	http.HandleFunc("/muralInfo", muralHandler.GetSoftwareSummary)
 	http.HandleFunc("/", getterPoster)
 
-	defer closeCons(context, *client)
-	cleanupOnExit(context, *client)
+	//clean up connection on application shutdown
+	defer closeCons(context.TODO(), *client)
+	cleanupOnExit(context.TODO(), *client)
 
+	fmt.Println("Done with setup")
 	http.ListenAndServe(":42069", nil)
 }
 
