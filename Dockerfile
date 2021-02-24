@@ -20,7 +20,7 @@ RUN go build -o /mural-device
 FROM alpine
 COPY --from=build /mural-device /mural-device
 # In order to persist info from container we use this dir and bind to a host volume
-# docker run -v <Path to host dir>:containerFiles -p <host port to use>:42069 -it my-go-app
+# docker run -v <Path to host dir>:/containerFiles -p <host port to use>:42069 -it my-go-app
 RUN mkdir /containerFiles
 # we need to add a directory which links to our fs folder to contain mural software info
 # ## Our start command which kicks off

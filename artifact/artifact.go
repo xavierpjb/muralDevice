@@ -23,12 +23,13 @@ type ArtifactModel struct {
 
 // Artifact base constructor for construtor to fs
 type Artifact struct {
-	fileSystem afero.Fs
+	fileSystem                afero.Fs
+	artifactRepositoryHandler IArtifactRepositoryHandler
 }
 
 // New instantiates an artifact with passed in fs
-func New(fileSystem afero.Fs) Artifact {
-	a := Artifact{fileSystem}
+func New(fileSystem afero.Fs, arh IArtifactRepositoryHandler) Artifact {
+	a := Artifact{fileSystem, arh}
 	return a
 }
 
@@ -37,6 +38,7 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		fmt.Fprintf(w, "Get method for artifact not yet setup")
+		a.printCollection()
 	case "POST":
 		// Check for valid JSON Body
 		if r.Body == nil {
@@ -74,6 +76,7 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 			return
 
 		}
+		a.store()
 
 	default:
 		fmt.Fprintf(w, "Sorry, only GET and POST methods are supported.")
@@ -113,4 +116,14 @@ func genFileName(ext string) string {
 	currentTime := time.Now().UTC()
 
 	return currentTime.Format("2006-01-02 15:04:05.000000000") + ext
+}
+
+func (a Artifact) printCollection() {
+	fmt.Println("retrieving list")
+	a.artifactRepositoryHandler.RetrieveList()
+	fmt.Println("done retrieving list")
+}
+
+func (a Artifact) store() {
+	a.artifactRepositoryHandler.Create()
 }
