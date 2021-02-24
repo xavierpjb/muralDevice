@@ -9,6 +9,7 @@ import (
 	"os/signal"
 
 	"muraldevice/artifact"
+	"muraldevice/imageDist"
 	"muraldevice/mural"
 
 	"github.com/spf13/afero"
@@ -30,6 +31,8 @@ func main() {
 
 	http.HandleFunc("/artifact", artifactHandler.HandleArtifacts)
 	http.HandleFunc("/muralInfo", muralHandler.GetSoftwareSummary)
+
+	http.Handle("/image", imageDist.ImageDistributor())
 	http.HandleFunc("/", getterPoster)
 
 	//clean up connection on application shutdown

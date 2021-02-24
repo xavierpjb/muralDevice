@@ -112,7 +112,7 @@ func (a Artifact) saveToFs(entry ArtifactModel) (string, string, error) {
 		return "", "", err
 	}
 	log.Println("Saved filed to fs")
-	return fileURL, fileType, nil
+	return "/image?source=" + fileURL, fileType, nil
 }
 
 func genFileName(ext string) string {
