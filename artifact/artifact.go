@@ -38,17 +38,38 @@ func New(fileSystem afero.Fs, arh IArtifactRepositoryHandler) Artifact {
 func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		page, err := strconv.ParseInt(r.URL.Query()["page"][0], 10, 64)
-		if err != nil {
-			log.Println("Cannot find query param")
-			log.Fatal(err)
-
-		}
-		var entries []ArtifactRepositoryModel
-		if page > 0 {
-			entries = a.artifactRepositoryHandler.RetrieveList(page)
+		page := r.URL.Query()["page"]
+		var err error
+		var pageInt int64
+		if len(page) > 0 {
+			pageInt, err = strconv.ParseInt(r.URL.Query()["page"][0], 10, 64)
+			if err != nil {
+				log.Println("Could not process page param")
+				log.Fatalln("err")
+			}
 		} else {
-			entries = a.artifactRepositoryHandler.RetrieveList(1)
+			log.Println("page query param not found, defaulting to 1")
+			pageInt = 1
+		}
+
+		perPage := r.URL.Query()["perPage"]
+		var perPageInt int64
+		if len(perPage) > 0 {
+			perPageInt, err = strconv.ParseInt(r.URL.Query()["perPage"][0], 10, 64)
+			if err != nil {
+				log.Println("Could not process perPage param")
+				log.Fatalln("err")
+			}
+		} else {
+			log.Println("perPage query param not found, defaulting to 5")
+			perPageInt = 5
+		}
+
+		var entries []ArtifactRepositoryModel
+		if pageInt > 0 && perPageInt > 0 {
+			entries = a.artifactRepositoryHandler.RetrieveList(pageInt, perPageInt)
+		} else {
+			entries = a.artifactRepositoryHandler.RetrieveList(1, 1)
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)

@@ -15,7 +15,7 @@ import (
 
 type IArtifactRepositoryHandler interface {
 	Create(ArtifactRepositoryModel)
-	RetrieveList(int64) []ArtifactRepositoryModel
+	RetrieveList(int64, int64) []ArtifactRepositoryModel
 }
 
 type ArtifactRepositoryModel struct {
@@ -44,9 +44,9 @@ func (a ArtifactRepositoryHandler) Create(artifactPersisted ArtifactRepositoryMo
 	}
 }
 
-func (a ArtifactRepositoryHandler) RetrieveList(page int64) []ArtifactRepositoryModel {
+func (a ArtifactRepositoryHandler) RetrieveList(page int64, perPage int64) []ArtifactRepositoryModel {
 	filter := bson.M{}
-	paginatedData, err := mongopagination.New(a.collection).Limit(5).Page(page).Sort("uploadDateTime", -1).Filter(filter).Find()
+	paginatedData, err := mongopagination.New(a.collection).Limit(perPage).Page(page).Sort("uploadDateTime", -1).Filter(filter).Find()
 	if err != nil {
 		panic(err)
 	}
