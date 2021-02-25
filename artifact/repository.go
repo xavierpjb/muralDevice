@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	mongopagination "github.com/gobeam/mongo-go-pagination"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -14,14 +15,14 @@ import (
 
 type IArtifactRepositoryHandler interface {
 	Create(ArtifactRepositoryModel)
-	RetrieveList()
+	RetrieveList(int64) []ArtifactRepositoryModel
 }
 
 type ArtifactRepositoryModel struct {
 	// ID             primitive.ObjectID `bson: "_id,omitempty"`
-	URL            string    `bson: "url,omitempty"`
-	FileType       string    `bson: "fileType,omitempty"`
-	UploadDateTime time.Time `bson: "uploadDateTime,omitempty"`
+	URL            string    `json:"url" bson:"url,omitempty"`
+	FileType       string    `json:"fileType" bson:"fileType,omitempty"`
+	UploadDateTime time.Time `json:"uploadDateTime" bson:"uploadDateTime,omitempty"`
 }
 
 type ArtifactRepositoryHandler struct {
@@ -43,18 +44,24 @@ func (a ArtifactRepositoryHandler) Create(artifactPersisted ArtifactRepositoryMo
 	}
 }
 
-func (a ArtifactRepositoryHandler) RetrieveList() {
-	cursor, err := a.collection.Find(context.TODO(), bson.M{})
+func (a ArtifactRepositoryHandler) RetrieveList(page int64) []ArtifactRepositoryModel {
+	filter := bson.M{}
+	paginatedData, err := mongopagination.New(a.collection).Limit(5).Page(page).Sort("uploadDateTime", -1).Filter(filter).Find()
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
-	var entries []bson.M
-	if err = cursor.All(context.TODO(), &entries); err != nil {
-		log.Fatal(err)
+	var entries []ArtifactRepositoryModel
+	for _, raw := range paginatedData.Data {
+		var art *ArtifactRepositoryModel
+		if marshallErr := bson.Unmarshal(raw, &art); marshallErr == nil {
+			entries = append(entries, *art)
+		}
 	}
+
 	fmt.Println("entries found")
 	fmt.Println(entries)
+	return entries
 }
 
 func Dbdriver() *mongo.Client {

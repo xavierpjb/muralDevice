@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/spf13/afero"
@@ -37,8 +38,21 @@ func New(fileSystem afero.Fs, arh IArtifactRepositoryHandler) Artifact {
 func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		fmt.Fprintf(w, "Get method for artifact not yet setup")
-		a.printCollection()
+		page, err := strconv.ParseInt(r.URL.Query()["page"][0], 10, 64)
+		if err != nil {
+			log.Println("Cannot find query param")
+			log.Fatal(err)
+
+		}
+		var entries []ArtifactRepositoryModel
+		if page > 0 {
+			entries = a.artifactRepositoryHandler.RetrieveList(page)
+		} else {
+			entries = a.artifactRepositoryHandler.RetrieveList(1)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(entries)
 	case "POST":
 		// Check for valid JSON Body
 		if r.Body == nil {
@@ -119,10 +133,4 @@ func genFileName(ext string) string {
 	currentTime := time.Now().UTC()
 
 	return currentTime.Format("2006-01-02 15:04:05.000000000") + ext
-}
-
-func (a Artifact) printCollection() {
-	fmt.Println("retrieving list")
-	a.artifactRepositoryHandler.RetrieveList()
-	fmt.Println("done retrieving list")
 }
