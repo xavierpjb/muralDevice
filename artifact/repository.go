@@ -54,7 +54,7 @@ func (a RepositoryHandler) RetrieveList(page int64, perPage int64) []RepositoryM
 	filter := bson.M{}
 	paginatedData, err := mongopagination.New(a.collection).Limit(perPage).Page(page).Sort("uploadDateTime", -1).Filter(filter).Find()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	var entries []RepositoryModel
