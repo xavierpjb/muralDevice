@@ -19,6 +19,7 @@ RUN go build -o /mural-device
 
 FROM alpine
 COPY --from=build /mural-device /mural-device
+RUN  apk --no-cache add tzdata
 # In order to persist info from container we use this dir and bind to a host volume
 # docker run -v <Path to host dir>:/containerFiles -p <host port to use>:42069 -it my-go-app
 RUN mkdir /containerFiles

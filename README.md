@@ -4,3 +4,10 @@ https://blog.seriesci.com/how-to-measure-code-coverage-in-go/ for info on how to
 go test -cover
 go test -coverprofile=coverage.out
 go tool cover -html=coverage.out
+To build container run 
+docker build -t mvral .
+in same directory as dockerfile
+
+
+To generate mock files
+mockgen -source=<source> -destination=<destination>

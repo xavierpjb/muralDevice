@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/spf13/afero"
@@ -24,11 +25,11 @@ type ArtifactModel struct {
 // Artifact base constructor for construtor to fs
 type Artifact struct {
 	fileSystem                afero.Fs
-	artifactRepositoryHandler IArtifactRepositoryHandler
+	artifactRepositoryHandler IRepositoryHandler
 }
 
 // New instantiates an artifact with passed in fs
-func New(fileSystem afero.Fs, arh IArtifactRepositoryHandler) Artifact {
+func New(fileSystem afero.Fs, arh IRepositoryHandler) Artifact {
 	a := Artifact{fileSystem, arh}
 	return a
 }
@@ -37,9 +38,31 @@ func New(fileSystem afero.Fs, arh IArtifactRepositoryHandler) Artifact {
 func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		fmt.Fprintf(w, "Get method for artifact not yet setup")
-		a.printCollection()
+		log.Println("Artifacts requested")
+		var isSuccesful bool
+		var pageInt int64
+		pageInt, isSuccesful = getIntParam(r, "page")
+		if !isSuccesful || pageInt < 1 {
+			log.Println("Defaulting page to 1")
+			pageInt = 1
+		}
+
+		var perPageInt int64
+		perPageInt, isSuccesful = getIntParam(r, "perPage")
+		if !isSuccesful || perPageInt < 1 {
+			log.Println("Defaulting perPage to 5")
+			perPageInt = 5
+		}
+
+		var entries []RepositoryModel
+		log.Printf("Fetching artifacts with params page:%d, perPage:%d\n", pageInt, perPageInt)
+		entries = a.artifactRepositoryHandler.RetrieveList(pageInt, perPageInt)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(entries)
+		log.Println("Fulfilled artifact request")
 	case "POST":
+		log.Println("Artifact post requested")
 		// Check for valid JSON Body
 		if r.Body == nil {
 			log.Println("Received an empty body")
@@ -76,12 +99,33 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 			return
 
 		}
-		artifPersisted := ArtifactRepositoryModel{URL: fileURL, FileType: fileType, UploadDateTime: time.Now()}
+		artifPersisted := RepositoryModel{URL: fileURL, FileType: fileType, UploadDateTime: time.Now()}
 		a.artifactRepositoryHandler.Create(artifPersisted)
+		log.Println("Artifact Post request fulfilled")
 
 	default:
 		fmt.Fprintf(w, "Sorry, only GET and POST methods are supported.")
 	}
+
+}
+
+func getIntParam(r *http.Request, param string) (int64, bool) {
+	paramVal := r.URL.Query()[param]
+	var err error
+	var paramInt int64
+	var isSuccesful bool
+	//Turn check for query param into a func
+	if len(paramVal) > 0 {
+		paramInt, err = strconv.ParseInt(paramVal[0], 10, 64)
+		if err != nil {
+			log.Println("Could not process page param")
+		} else {
+			isSuccesful = true
+		}
+	} else {
+		log.Println("page query param not found")
+	}
+	return paramInt, isSuccesful
 
 }
 
@@ -119,10 +163,4 @@ func genFileName(ext string) string {
 	currentTime := time.Now().UTC()
 
 	return currentTime.Format("2006-01-02 15:04:05.000000000") + ext
-}
-
-func (a Artifact) printCollection() {
-	fmt.Println("retrieving list")
-	a.artifactRepositoryHandler.RetrieveList()
-	fmt.Println("done retrieving list")
 }

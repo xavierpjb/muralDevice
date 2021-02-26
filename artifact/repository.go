@@ -6,36 +6,42 @@ import (
 	"log"
 	"time"
 
+	mongopagination "github.com/gobeam/mongo-go-pagination"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-type IArtifactRepositoryHandler interface {
-	Create(ArtifactRepositoryModel)
-	RetrieveList()
+// IRepositoryHandler defines the methods needed for support artifact handling
+type IRepositoryHandler interface {
+	Create(RepositoryModel)
+	RetrieveList(int64, int64) []RepositoryModel
 }
 
-type ArtifactRepositoryModel struct {
+// RepositoryModel represents the db and json models to be retrieved and sent to clients
+type RepositoryModel struct {
 	// ID             primitive.ObjectID `bson: "_id,omitempty"`
-	URL            string    `bson: "url,omitempty"`
-	FileType       string    `bson: "fileType,omitempty"`
-	UploadDateTime time.Time `bson: "uploadDateTime,omitempty"`
+	URL            string    `json:"url" bson:"url,omitempty"`
+	FileType       string    `json:"fileType" bson:"fileType,omitempty"`
+	UploadDateTime time.Time `json:"uploadDateTime" bson:"uploadDateTime,omitempty"`
 }
 
-type ArtifactRepositoryHandler struct {
+// RepositoryHandler takes the collection of artifacts to perform CRUD ops
+type RepositoryHandler struct {
 	collection *mongo.Collection
 }
 
-func NewARH(client *mongo.Client) ArtifactRepositoryHandler {
+// NewRH is the instantiation of an artifact repository handler
+func NewRH(client *mongo.Client) RepositoryHandler {
 
 	col := client.Database("mvral").Collection("artifact")
-	a := ArtifactRepositoryHandler{col}
+	a := RepositoryHandler{col}
 	return a
 }
 
-func (a ArtifactRepositoryHandler) Create(artifactPersisted ArtifactRepositoryModel) {
+// Create makes a new entry in the collection of artifacts
+func (a RepositoryHandler) Create(artifactPersisted RepositoryModel) {
 	// this will be correctly filled in once feature for creating entry done
 	_, err := a.collection.InsertOne(context.TODO(), artifactPersisted)
 	if err != nil {
@@ -43,20 +49,28 @@ func (a ArtifactRepositoryHandler) Create(artifactPersisted ArtifactRepositoryMo
 	}
 }
 
-func (a ArtifactRepositoryHandler) RetrieveList() {
-	cursor, err := a.collection.Find(context.TODO(), bson.M{})
+// RetrieveList get the artifacts and metadata from the db
+func (a RepositoryHandler) RetrieveList(page int64, perPage int64) []RepositoryModel {
+	filter := bson.M{}
+	paginatedData, err := mongopagination.New(a.collection).Limit(perPage).Page(page).Sort("uploadDateTime", -1).Filter(filter).Find()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var entries []bson.M
-	if err = cursor.All(context.TODO(), &entries); err != nil {
-		log.Fatal(err)
+	var entries []RepositoryModel
+	for _, raw := range paginatedData.Data {
+		var art *RepositoryModel
+		if marshallErr := bson.Unmarshal(raw, &art); marshallErr == nil {
+			entries = append(entries, *art)
+		}
 	}
+
 	fmt.Println("entries found")
 	fmt.Println(entries)
+	return entries
 }
 
+// Dbdriver established the connection to our mongo db
 func Dbdriver() *mongo.Client {
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://mongo:27017"))
 	if err != nil {

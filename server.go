@@ -26,7 +26,7 @@ func main() {
 
 	fmt.Println("will try to connect to db")
 	client := artifact.Dbdriver()
-	arh := artifact.NewARH(client)
+	arh := artifact.NewRH(client)
 	artifactHandler := artifact.New(fs, arh)
 
 	http.HandleFunc("/artifact", artifactHandler.HandleArtifacts)

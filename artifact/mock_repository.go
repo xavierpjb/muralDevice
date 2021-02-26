@@ -10,49 +10,51 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-// MockIArtifactRepositoryHandler is a mock of IArtifactRepositoryHandler interface.
-type MockIArtifactRepositoryHandler struct {
+// MockIRepositoryHandler is a mock of IRepositoryHandler interface.
+type MockIRepositoryHandler struct {
 	ctrl     *gomock.Controller
-	recorder *MockIArtifactRepositoryHandlerMockRecorder
+	recorder *MockIRepositoryHandlerMockRecorder
 }
 
-// MockIArtifactRepositoryHandlerMockRecorder is the mock recorder for MockIArtifactRepositoryHandler.
-type MockIArtifactRepositoryHandlerMockRecorder struct {
-	mock *MockIArtifactRepositoryHandler
+// MockIRepositoryHandlerMockRecorder is the mock recorder for MockIRepositoryHandler.
+type MockIRepositoryHandlerMockRecorder struct {
+	mock *MockIRepositoryHandler
 }
 
-// NewMockIArtifactRepositoryHandler creates a new mock instance.
-func NewMockIArtifactRepositoryHandler(ctrl *gomock.Controller) *MockIArtifactRepositoryHandler {
-	mock := &MockIArtifactRepositoryHandler{ctrl: ctrl}
-	mock.recorder = &MockIArtifactRepositoryHandlerMockRecorder{mock}
+// NewMockIRepositoryHandler creates a new mock instance.
+func NewMockIRepositoryHandler(ctrl *gomock.Controller) *MockIRepositoryHandler {
+	mock := &MockIRepositoryHandler{ctrl: ctrl}
+	mock.recorder = &MockIRepositoryHandlerMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockIArtifactRepositoryHandler) EXPECT() *MockIArtifactRepositoryHandlerMockRecorder {
+func (m *MockIRepositoryHandler) EXPECT() *MockIRepositoryHandlerMockRecorder {
 	return m.recorder
 }
 
 // Create mocks base method.
-func (m *MockIArtifactRepositoryHandler) Create(arg0 ArtifactRepositoryModel) {
+func (m *MockIRepositoryHandler) Create(arg0 RepositoryModel) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Create", arg0)
 }
 
 // Create indicates an expected call of Create.
-func (mr *MockIArtifactRepositoryHandlerMockRecorder) Create(arg0 interface{}) *gomock.Call {
+func (mr *MockIRepositoryHandlerMockRecorder) Create(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockIArtifactRepositoryHandler)(nil).Create), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockIRepositoryHandler)(nil).Create), arg0)
 }
 
 // RetrieveList mocks base method.
-func (m *MockIArtifactRepositoryHandler) RetrieveList() {
+func (m *MockIRepositoryHandler) RetrieveList(arg0, arg1 int64) []RepositoryModel {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RetrieveList")
+	ret := m.ctrl.Call(m, "RetrieveList", arg0, arg1)
+	ret0, _ := ret[0].([]RepositoryModel)
+	return ret0
 }
 
 // RetrieveList indicates an expected call of RetrieveList.
-func (mr *MockIArtifactRepositoryHandlerMockRecorder) RetrieveList() *gomock.Call {
+func (mr *MockIRepositoryHandlerMockRecorder) RetrieveList(arg0, arg1 int64) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RetrieveList", reflect.TypeOf((*MockIArtifactRepositoryHandler)(nil).RetrieveList))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RetrieveList", reflect.TypeOf((*MockIRepositoryHandler)(nil).RetrieveList), arg0, arg1)
 }
