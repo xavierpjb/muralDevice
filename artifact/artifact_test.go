@@ -29,9 +29,9 @@ func teardownAll() {
 	fmt.Println("teardown")
 
 }
-func getMockDB(t *testing.T) *MockIArtifactRepositoryHandler {
+func getMockDB(t *testing.T) *MockIRepositoryHandler {
 	mockCtrl := gomock.NewController(t)
-	mockObj := NewMockIArtifactRepositoryHandler(mockCtrl)
+	mockObj := NewMockIRepositoryHandler(mockCtrl)
 	return mockObj
 
 }
@@ -39,7 +39,7 @@ func TestGetArtifact(t *testing.T) {
 	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
 	// pass 'nil' as the third parameter.
 	mockArtiDB := getMockDB(t)
-	mockArtiDB.EXPECT().RetrieveList()
+	mockArtiDB.EXPECT().RetrieveList(1, 5)
 	artifactHandler := New(afero.NewMemMapFs(), mockArtiDB)
 	req, err := http.NewRequest("GET", "/", nil)
 	if err != nil {
@@ -59,14 +59,6 @@ func TestGetArtifact(t *testing.T) {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)
 	}
-
-	// Check the response body is what we expect.
-	expected := `Get method for artifact not yet setup`
-	if rr.Body.String() != expected {
-		t.Errorf("handler returned unexpected body: got %v want %v",
-			rr.Body.String(), expected)
-	}
-	fmt.Print("get artifact")
 
 }
 
