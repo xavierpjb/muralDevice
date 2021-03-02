@@ -18,8 +18,14 @@ import (
 
 // ArtifactModel represent the model to imitate an artifact (file/mp4 etc)
 type ArtifactModel struct {
-	File string
-	Type string
+	Username string
+	File     string
+	Type     string
+}
+
+// IsPersistable checks that the properties need to persist an artifact are all present
+func (a ArtifactModel) IsPersistable() bool {
+	return a.File != "" && a.Type != "" && a.Username != ""
 }
 
 // Artifact base constructor for construtor to fs
@@ -61,6 +67,7 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(entries)
 		log.Println("Fulfilled artifact request")
+
 	case "POST":
 		log.Println("Artifact post requested")
 		// Check for valid JSON Body
@@ -90,6 +97,14 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if artif.IsPersistable() {
+			missingParams := "Params missing from request body. Should include username, file, filetype"
+			log.Println(missingParams)
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, missingParams)
+			return
+		}
+
 		// Save artifact to fs
 		fileURL, fileType, fsErr := a.saveToFs(artif)
 		if fsErr != nil {
@@ -97,9 +112,9 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 			log.Println(fsErr)
 			w.WriteHeader(http.StatusBadRequest)
 			return
-
 		}
-		artifPersisted := RepositoryModel{URL: fileURL, FileType: fileType, UploadDateTime: time.Now()}
+
+		artifPersisted := RepositoryModel{URL: fileURL, FileType: fileType, UploadDateTime: time.Now(), Username: artif.Username}
 		a.artifactRepositoryHandler.Create(artifPersisted)
 		log.Println("Artifact Post request fulfilled")
 
