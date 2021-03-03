@@ -1,0 +1,19 @@
+name: Docker Image CI
+
+on:
+  release:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Docker build and publish
+      run: |
+        TAG=(echo $GITHUB_REF | grep -o "[0-9][\.].*)
+        echo Image tag is: $TAG
+        docker login --username ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.DOCKER_PASSWORD }}
+        docker build --build-arg BUILD_VERSION=$TAG -t waduphaitian/mural_dev .
+        echo "waduphaitian/mural_dev:latest" "waduphaitian/mural_dev:${TAG}" | xargs -n 1 docker push
