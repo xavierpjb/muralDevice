@@ -16,13 +16,18 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// BuildVersion uses dockerfile build number which is fetched from github release number
+var BuildVersion = "development"
+
 func main() {
+	log.Printf("App version is: %s\n", BuildVersion)
 	fs := afero.NewOsFs()
 	softJSON, err := fs.Open("containerFiles/software.json")
 	if err != nil {
 		log.Panic(err)
 	}
 	muralHandler := mural.New(softJSON)
+	muralHandler.Software.Version = BuildVersion
 
 	fmt.Println("will try to connect to db")
 	client := artifact.Dbdriver()

@@ -1,4 +1,5 @@
 FROM golang:1.15.7-alpine3.13 as build
+ARG BUILD_VERSION
 
 ## We create an /app directory within our
 ## image that will hold our application source
@@ -15,7 +16,7 @@ WORKDIR /app
 RUN go mod download
 ## we run go build to compile the binary
 ## executable of our Go program
-RUN go build -o /mural-device
+RUN go build -ldflags "-X main.BuildVersion=$BUILD_VERSION" -o /mural-device
 
 FROM alpine
 COPY --from=build /mural-device /mural-device
