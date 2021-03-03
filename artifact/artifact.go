@@ -97,7 +97,7 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if artif.IsPersistable() {
+		if !artif.IsPersistable() {
 			missingParams := "Params missing from request body. Should include username, file, filetype"
 			log.Println(missingParams)
 			w.WriteHeader(http.StatusBadRequest)

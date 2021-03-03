@@ -6,7 +6,10 @@ import (
 	"log"
 	"time"
 
+	_ "muraldevice/migrations"
+
 	mongopagination "github.com/gobeam/mongo-go-pagination"
+	migrate "github.com/xakep666/mongo-migrate"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -65,9 +68,6 @@ func (a RepositoryHandler) RetrieveList(page int64, perPage int64) []RepositoryM
 			entries = append(entries, *art)
 		}
 	}
-
-	fmt.Println("entries found")
-	fmt.Println(entries)
 	return entries
 }
 
@@ -85,6 +85,11 @@ func Dbdriver() *mongo.Client {
 	err = client.Ping(ctx, readpref.Primary())
 	if err != nil {
 		log.Fatal(err)
+	}
+	db := client.Database("mvral")
+	migrate.SetDatabase(db)
+	if err := migrate.Up(migrate.AllAvailable); err != nil {
+		fmt.Print(err)
 	}
 
 	return client
