@@ -11,6 +11,7 @@ import (
 	"muraldevice/artifact"
 	"muraldevice/imageDist"
 	"muraldevice/mural"
+	"muraldevice/update"
 
 	"github.com/spf13/afero"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -20,7 +21,7 @@ import (
 var BuildVersion = "development"
 
 func main() {
-	log.Printf("App version is: %s\n", BuildVersion)
+	fmt.Printf("App version is: %s\n", BuildVersion)
 	fs := afero.NewOsFs()
 	softJSON, err := fs.Open("containerFiles/software.json")
 	if err != nil {
@@ -28,6 +29,8 @@ func main() {
 	}
 	muralHandler := mural.New(softJSON)
 	muralHandler.Software.Version = BuildVersion
+	fmt.Println("version from handler below")
+	fmt.Println(muralHandler.Software.Version)
 
 	fmt.Println("will try to connect to db")
 	client := artifact.Dbdriver()
@@ -38,6 +41,8 @@ func main() {
 	http.HandleFunc("/muralInfo", muralHandler.GetSoftwareSummary)
 
 	http.Handle("/image", imageDist.ImageDistributor())
+	updateHandler := update.New(fs)
+	http.HandleFunc("/update", updateHandler.HandleUpdate)
 	http.HandleFunc("/", getterPoster)
 
 	//clean up connection on application shutdown

@@ -3,7 +3,7 @@ version: '3'
 services: 
   mvral:
     container_name: mvral
-    image: waduphaitian/mural_dev:multi
+    image: waduphaitian/mural_dev:latest
     restart: unless-stopped
     ports: 
       - 42069:42069
