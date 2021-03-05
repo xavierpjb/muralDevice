@@ -16,7 +16,7 @@ WORKDIR /app
 RUN go mod download
 ## we run go build to compile the binary
 ## executable of our Go program
-RUN go build -ldflags "-X main.BuildVersion=$BUILD_VERSION" -o /mural-device
+RUN env GOOS=linux GOARCH=arm64 go build -ldflags "-X main.BuildVersion=$BUILD_VERSION" -o /mural-device
 
 FROM alpine
 COPY --from=build /mural-device /mural-device

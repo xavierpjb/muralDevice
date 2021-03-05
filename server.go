@@ -18,7 +18,7 @@ import (
 )
 
 // BuildVersion uses dockerfile build number which is fetched from github release number
-var BuildVersion = "development"
+var BuildVersion = "0.0.0"
 
 func main() {
 	fmt.Printf("App version is: %s\n", BuildVersion)
