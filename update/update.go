@@ -33,7 +33,8 @@ func (u Updater) HandleUpdate(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
 		fmt.Println("Update endpoint called, Parsing file")
-		r.ParseMultipartForm(32 << 20)
+		// Max size of 128 mbs
+		r.ParseMultipartForm(128 << 20)
 		fmt.Println(r.MultipartForm.File)
 		cont := r.MultipartForm.Value["filer"]
 
@@ -50,6 +51,9 @@ func (u Updater) HandleUpdate(w http.ResponseWriter, r *http.Request) {
 		stdout.Write([]byte("cd /home/ubuntu/ && touch thisIsFromGo && docker-compose down && cd containerFiles && (docker load < mural_dev.tar.gz) && cd .. && docker-compose up -d"))
 		fmt.Println("Done writing, containers will start shutting down")
 		stdout.Close()
+
+	default:
+		fmt.Fprintf(w, "Sorry, only POST method is supported.")
 	}
 
 }
