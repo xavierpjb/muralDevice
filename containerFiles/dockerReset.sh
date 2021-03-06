@@ -1,0 +1,1 @@
+docker load < mural_dev.tar.gz && docker-compose down && docker-compose up
