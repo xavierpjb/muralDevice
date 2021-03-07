@@ -56,18 +56,12 @@ func (a RepositoryHandler) Create(artifactPersisted RepositoryModel) {
 // RetrieveList get the artifacts and metadata from the db
 func (a RepositoryHandler) RetrieveList(page int64, perPage int64) []RepositoryModel {
 	filter := bson.M{}
-	paginatedData, err := mongopagination.New(a.collection).Limit(perPage).Page(page).Sort("uploadDateTime", -1).Filter(filter).Find()
+	var entries []RepositoryModel
+	_, err := mongopagination.New(a.collection).Limit(perPage).Page(page).Sort("uploadDateTime", -1).Filter(filter).Decode(&entries).Find()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var entries []RepositoryModel
-	for _, raw := range paginatedData.Data {
-		var art *RepositoryModel
-		if marshallErr := bson.Unmarshal(raw, &art); marshallErr == nil {
-			entries = append(entries, *art)
-		}
-	}
 	return entries
 }
 

@@ -11,3 +11,6 @@ in same directory as dockerfile
 
 To generate mock files
 mockgen -source=<source> -destination=<destination>
+
+To tar file 
+docker save waduphaitian/mural_dev:latest | gzip > mural_dev.tar.gz
