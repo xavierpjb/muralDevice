@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"time"
 
 	"github.com/spf13/afero"
 )
@@ -86,7 +85,7 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if !artif.IsPersistable() {
-			missingParams := "Params missing from request body. Should include username, file, filetype"
+			missingParams := "Params missing from request body. Should include username, file, filetype and datetime"
 			log.Println(missingParams)
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprintf(w, missingParams)
@@ -102,7 +101,7 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		artifPersisted := RepositoryModel{URL: fileURL, FileType: fileType, UploadDateTime: time.Now(), Username: artif.Username}
+		artifPersisted := RepositoryModel{URL: fileURL, FileType: fileType, UploadDateTime: artif.UploadDateTime.UTC(), Username: artif.Username}
 		a.artifactRepositoryHandler.Create(artifPersisted)
 		log.Println("Artifact Post request fulfilled")
 
@@ -146,7 +145,7 @@ func (a Artifact) saveToFs(entry ArtifactModel) (string, string, error) {
 		return "", "", err
 	}
 	fileType := ".jpeg"
-	fileURL := genFileName(fileType)
+	fileURL := genFileName(entry, fileType)
 
 	f, err := a.fileSystem.OpenFile("containerFiles/artifacts/"+fileURL, os.O_WRONLY|os.O_CREATE, 0644)
 
@@ -162,8 +161,7 @@ func (a Artifact) saveToFs(entry ArtifactModel) (string, string, error) {
 	return "/image?source=" + fileURL, fileType, nil
 }
 
-func genFileName(ext string) string {
-	currentTime := time.Now().UTC()
-
+func genFileName(entry ArtifactModel, ext string) string {
+	currentTime := entry.UploadDateTime.UTC()
 	return currentTime.Format("2006-01-02 15:04:05.000000000") + ext
 }

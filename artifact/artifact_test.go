@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/afero"
@@ -85,7 +86,8 @@ func TestValidPostArtifact(t *testing.T) {
 func generatePostRequest() *http.Request {
 	smallJPG := "/9j/4AAQSkZJRgABAQAAAQABAAD//gAfQ29tcHJlc3NlZCBieSBqcGVnLXJlY29tcHJlc3P/2wCEAAQEBAQEBAQEBAQGBgUGBggHBwcHCAwJCQkJCQwTDA4MDA4MExEUEA8QFBEeFxUVFx4iHRsdIiolJSo0MjRERFwBBAQEBAQEBAQEBAYGBQYGCAcHBwcIDAkJCQkJDBMMDgwMDgwTERQQDxAUER4XFRUXHiIdGx0iKiUlKjQyNEREXP/CABEIAAIAAgMBIgACEQEDEQH/xAAUAAEAAAAAAAAAAAAAAAAAAAAH/9oACAEBAAAAAD7/xAAUAQEAAAAAAAAAAAAAAAAAAAAH/9oACAECEAAAAEL/xAAUAQEAAAAAAAAAAAAAAAAAAAAF/9oACAEDEAAAACf/xAAWEAEBAQAAAAAAAAAAAAAAAAABACH/2gAIAQEAAT8ADC//xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAECAQE/AH//xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAEDAQE/AH//2Q=="
 
-	var jsonStr = []byte(`{"file":"` + smallJPG + `", "type": "type", "username": "username"}`)
+	uploadDateTime := time.Now().Format(time.RFC3339)
+	var jsonStr = []byte(`{"file":"` + smallJPG + `", "type": "type", "username": "username", "uploadDateTime": "` + uploadDateTime + `"}`)
 	req, err := http.NewRequest("POST", "rand", bytes.NewBuffer(jsonStr))
 
 	if err != nil {
