@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"image/jpeg"
 	"io/ioutil"
@@ -11,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/afero"
 )
@@ -58,29 +60,16 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		log.Println("Artifact post requested")
 		// Check for valid JSON Body
-		if r.Body == nil {
-			log.Println("Received an empty body")
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		defer r.Body.Close()
-
-		// Read body
-		body, readErr := ioutil.ReadAll(r.Body)
-		if readErr != nil {
-			log.Println(readErr)
-			w.WriteHeader(http.StatusInternalServerError)
+		body, err := getJSONBody(w, r)
+		if err != nil {
+			log.Println(err)
 			return
 		}
 
-		// Parse JSON
-		artif := ArtifactModel{}
-		jsonErr := json.Unmarshal(body, &artif)
-		if jsonErr != nil {
-
-			log.Println("Received Invalid JSON")
-			log.Println(jsonErr)
-			w.WriteHeader(http.StatusBadRequest)
+		// Get Json from body
+		artif, err := unmarshalBody(body)
+		if err != nil {
+			log.Println(err)
 			return
 		}
 
@@ -93,7 +82,7 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Save artifact to fs
-		fileURL, fileType, fsErr := a.saveToFs(artif)
+		fileURL, fileType, fsErr := a.saveToFs(*artif)
 		if fsErr != nil {
 			log.Println("Error saving to filesystem")
 			log.Println(fsErr)
@@ -105,10 +94,76 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 		a.artifactRepositoryHandler.Create(artifPersisted)
 		log.Println("Artifact Post request fulfilled")
 
+	case "DELETE":
+		log.Println("Delete called")
+		// Check for valid JSON Body
+		body, err := getJSONBody(w, r)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		artif, err := unmarshalDeleteJSON(body)
+
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		if !artif.IsDeleteable() {
+			missingParams := "Params missing from request body. Should include url and username"
+			log.Println(missingParams)
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, missingParams)
+			return
+		}
+
+		a.artifactRepositoryHandler.Delete(*artif)
+		filename := strings.Replace(artif.URL, "/image?source=", "", 1)
+		fmt.Println("file to delete is")
+		fmt.Println(filename)
+
+		a.deleteFromFS(filename)
+		log.Println("Artifact delete request fulfilled")
+
 	default:
-		fmt.Fprintf(w, "Sorry, only GET and POST methods are supported.")
+		fmt.Fprintf(w, "Sorry, only GET, DELET and POST methods are supported.")
 	}
 
+}
+
+func getJSONBody(w http.ResponseWriter, r *http.Request) ([]byte, error) {
+	if r.Body == nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return nil, errors.New("Received an empty body")
+	}
+	defer r.Body.Close()
+
+	// Read body
+	body, readErr := ioutil.ReadAll(r.Body)
+	if readErr != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return nil, readErr
+	}
+
+	return body, nil
+}
+
+func unmarshalBody(body []byte) (*ArtifactModel, error) {
+	var artif ArtifactModel
+	jsonErr := json.Unmarshal(body, &artif)
+	if jsonErr != nil {
+		return nil, jsonErr
+	}
+
+	return &artif, nil
+}
+
+func unmarshalDeleteJSON(body []byte) (*DeleteModel, error) {
+	var delete DeleteModel
+	jsonErr := json.Unmarshal(body, &delete)
+	if jsonErr != nil {
+		return nil, jsonErr
+	}
+	return &delete, nil
 }
 
 func getIntParam(r *http.Request, param string) (int64, bool) {
@@ -159,6 +214,15 @@ func (a Artifact) saveToFs(entry ArtifactModel) (string, string, error) {
 	}
 	log.Println("Saved filed to fs")
 	return "/image?source=" + fileURL, fileType, nil
+}
+
+func (a Artifact) deleteFromFS(filename string) {
+	err := a.fileSystem.Remove("containerFiles/artifacts/" + filename)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 }
 
 func genFileName(entry ArtifactModel, ext string) string {

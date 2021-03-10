@@ -14,3 +14,14 @@ type ArtifactModel struct {
 func (a ArtifactModel) IsPersistable() bool {
 	return a.File != "" && a.Type != "" && a.Username != "" && !a.UploadDateTime.IsZero()
 }
+
+// DeleteModel specifies the information needed to delete an artifact
+type DeleteModel struct {
+	Username string
+	URL      string
+}
+
+// IsDeleteable checks for the params needed to make a deleted request
+func (a DeleteModel) IsDeleteable() bool {
+	return a.Username != "" && a.URL != ""
+}

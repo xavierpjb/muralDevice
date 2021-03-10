@@ -20,6 +20,7 @@ import (
 type IRepositoryHandler interface {
 	Create(RepositoryModel)
 	RetrieveList(int64, int64) []RepositoryModel
+	Delete(DeleteModel)
 }
 
 // RepositoryModel represents the db and json models to be retrieved and sent to clients
@@ -65,9 +66,34 @@ func (a RepositoryHandler) RetrieveList(page int64, perPage int64) []RepositoryM
 	return entries
 }
 
+// Delete removes the artifact from mongo db
+func (a RepositoryHandler) Delete(artifactReqested DeleteModel) {
+	artToDelete := bson.M{"url": artifactReqested.URL, "username": artifactReqested.Username}
+	var entry RepositoryModel
+
+	err := a.collection.FindOne(
+		context.TODO(),
+		artToDelete,
+	).Decode(&entry)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if entry == (RepositoryModel{}) {
+		fmt.Println("Entry not found")
+		return
+	}
+
+	result, err := a.collection.DeleteOne(context.TODO(), artToDelete)
+
+	fmt.Printf("Remove %v document", result.DeletedCount)
+
+}
+
 // Dbdriver established the connection to our mongo db
 func Dbdriver() *mongo.Client {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://mongo:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
 	if err != nil {
 		log.Fatal(err)
 	}
