@@ -226,7 +226,6 @@ func (a Artifact) deleteFromFS(filename string) {
 		fmt.Println(err)
 		return
 	}
-
 }
 
 func genFileName(entry ArtifactModel, ext string) string {
