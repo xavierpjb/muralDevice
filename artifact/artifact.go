@@ -60,9 +60,11 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		log.Println("Artifact post requested")
 		// Check for valid JSON Body
-		body, err := getJSONBody(w, r)
+		body, err := getJSONBody(r)
 		if err != nil {
+			log.Println("we got an error")
 			log.Println(err)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
@@ -70,6 +72,7 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 		artif, err := unmarshalBody(body)
 		if err != nil {
 			log.Println(err)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
@@ -97,8 +100,9 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 	case "DELETE":
 		log.Println("Delete called")
 		// Check for valid JSON Body
-		body, err := getJSONBody(w, r)
+		body, err := getJSONBody(r)
 		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
 			log.Println(err)
 			return
 		}
@@ -130,20 +134,20 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func getJSONBody(w http.ResponseWriter, r *http.Request) ([]byte, error) {
+func getJSONBody(r *http.Request) ([]byte, error) {
 	if r.Body == nil {
-		w.WriteHeader(http.StatusBadRequest)
+		fmt.Println("body has issues")
 		return nil, errors.New("Received an empty body")
 	}
 	defer r.Body.Close()
 
 	// Read body
 	body, readErr := ioutil.ReadAll(r.Body)
+	fmt.Println("we should get a read err")
 	if readErr != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println("read err")
 		return nil, readErr
 	}
-
 	return body, nil
 }
 
