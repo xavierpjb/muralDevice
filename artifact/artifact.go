@@ -62,14 +62,13 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 		// Check for valid JSON Body
 		body, err := getJSONBody(r)
 		if err != nil {
-			log.Println("we got an error")
 			log.Println(err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		// Get Json from body
-		artif, err := unmarshalBody(body)
+		artif, err := unmarshalPostBody(body)
 		if err != nil {
 			log.Println(err)
 			w.WriteHeader(http.StatusBadRequest)
@@ -122,8 +121,6 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 
 		a.artifactRepositoryHandler.Delete(*artif)
 		filename := strings.Replace(artif.URL, "/image?source=", "", 1)
-		fmt.Println("file to delete is")
-		fmt.Println(filename)
 
 		a.deleteFromFS(filename)
 		log.Println("Artifact delete request fulfilled")
@@ -151,7 +148,7 @@ func getJSONBody(r *http.Request) ([]byte, error) {
 	return body, nil
 }
 
-func unmarshalBody(body []byte) (*ArtifactModel, error) {
+func unmarshalPostBody(body []byte) (*ArtifactModel, error) {
 	var artif ArtifactModel
 	jsonErr := json.Unmarshal(body, &artif)
 	if jsonErr != nil {

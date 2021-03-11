@@ -75,25 +75,22 @@ func (a RepositoryHandler) Delete(artifactReqested DeleteModel) {
 		context.TODO(),
 		artToDelete,
 	).Decode(&entry)
-
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	if entry == (RepositoryModel{}) {
 		fmt.Println("Entry not found")
 		return
 	}
 
 	result, err := a.collection.DeleteOne(context.TODO(), artToDelete)
-
 	fmt.Printf("Remove %v document", result.DeletedCount)
 
 }
 
 // Dbdriver established the connection to our mongo db
 func Dbdriver() *mongo.Client {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://mongo:27017"))
 	if err != nil {
 		log.Fatal(err)
 	}
