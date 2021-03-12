@@ -8,6 +8,7 @@ type ArtifactModel struct {
 	File           string
 	Type           string
 	UploadDateTime time.Time
+	Caption        *string
 }
 
 // IsPersistable checks that the properties need to persist an artifact are all present
