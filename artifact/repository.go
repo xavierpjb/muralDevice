@@ -30,6 +30,7 @@ type RepositoryModel struct {
 	FileType       string    `json:"fileType" bson:"fileType,omitempty"`
 	UploadDateTime time.Time `json:"uploadDateTime" bson:"uploadDateTime,omitempty"`
 	Username       string    `json:"username" bson:"username,omitempty"`
+	Caption        string    `json:"caption,omitempty" bson:"caption,omitempty"`
 }
 
 // RepositoryHandler takes the collection of artifacts to perform CRUD ops

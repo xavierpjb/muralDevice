@@ -92,7 +92,16 @@ func (a Artifact) HandleArtifacts(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		artifPersisted := RepositoryModel{URL: fileURL, FileType: fileType, UploadDateTime: artif.UploadDateTime.UTC(), Username: artif.Username}
+		artifPersisted := RepositoryModel{
+			URL:            fileURL,
+			FileType:       fileType,
+			UploadDateTime: artif.UploadDateTime.UTC(),
+			Username:       artif.Username,
+		}
+
+		if artif.Caption != nil {
+			artifPersisted.Caption = *artif.Caption
+		}
 		a.artifactRepositoryHandler.Create(artifPersisted)
 		log.Println("Artifact Post request fulfilled")
 
