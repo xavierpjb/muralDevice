@@ -45,6 +45,18 @@ func (mr *MockIRepositoryHandlerMockRecorder) Create(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockIRepositoryHandler)(nil).Create), arg0)
 }
 
+// Delete mocks base method.
+func (m *MockIRepositoryHandler) Delete(arg0 DeleteModel) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Delete", arg0)
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockIRepositoryHandlerMockRecorder) Delete(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockIRepositoryHandler)(nil).Delete), arg0)
+}
+
 // RetrieveList mocks base method.
 func (m *MockIRepositoryHandler) RetrieveList(arg0, arg1 int64) []RepositoryModel {
 	m.ctrl.T.Helper()

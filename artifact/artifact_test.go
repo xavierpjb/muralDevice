@@ -188,6 +188,39 @@ func generateBodylessJSON() *http.Request {
 
 }
 
-// test for invalid b64
+func TestValidDeleteArtifact(t *testing.T) {
+	appFS := afero.NewMemMapFs()
+	fileName := "fileToDelete"
+	deleteArt := DeleteModel{"username", "/image?source=fileToDelete"}
+	// put it in the filesystem
+	afero.WriteFile(appFS, "containerFiles/artifacts/"+fileName, []byte("this will get deleted"), 0644)
+	mockArtiDB := getMockDB(t)
+	mockArtiDB.EXPECT().Delete(deleteArt)
 
-// test for invalid jpeg
+	artifactHandler := New(appFS, mockArtiDB)
+	handler := http.HandlerFunc(artifactHandler.HandleArtifacts)
+	req := generateDeleteRequest(&deleteArt)
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	// create a delete request with taht request
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+
+}
+
+func generateDeleteRequest(deleteArt *DeleteModel) *http.Request {
+	var jsonStr = []byte(`{"username":"` + deleteArt.Username + `", "url":"` + deleteArt.URL + `"}`)
+	req, err := http.NewRequest("DELETE", "rand", bytes.NewBuffer(jsonStr))
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+
+	return req
+
+}
