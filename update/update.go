@@ -39,7 +39,7 @@ func (u Updater) HandleUpdate(w http.ResponseWriter, r *http.Request) {
 		cont := r.MultipartForm.Value["filer"]
 
 		fmt.Println("Writing tar file to fs")
-		err = afero.WriteFile(u.fileSystem, "containerFiles/mural_dev.tar.gz", []byte(cont[0]), 0666)
+		err = afero.WriteFile(u.fileSystem, "muraldevice.tar.gz", []byte(cont[0]), 0666)
 		if err != nil {
 			fmt.Println("There was an issue saving to fs")
 			w.WriteHeader(http.StatusInternalServerError)
@@ -48,7 +48,10 @@ func (u Updater) HandleUpdate(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Println("Writing update instruction so system pipe")
 		stdout, _ := u.fileSystem.OpenFile("containerFiles/update", os.O_WRONLY, 0600)
-		stdout.Write([]byte("cd /home/ubuntu/ && touch thisIsFromGo && docker-compose down && cd containerFiles && (docker load < mural_dev.tar.gz) && cd .. && docker-compose up -d"))
+		stdout.Write([]byte("cd /home/ubuntu/ && tar -xzf muraldevice.tar.gz && sudo reboot"))
+
+		// Do Not remove. These are the pipe commands for updating through containers
+		// stdout.Write([]byte("cd /home/ubuntu/ && touch thisIsFromGo && docker-compose down && cd containerFiles && (docker load < mural_dev.tar.gz) && cd .. && docker-compose up -d"))
 		fmt.Println("Done writing, containers will start shutting down")
 		stdout.Close()
 

@@ -12,7 +12,7 @@ multi:## Build and push a project docker image for multiple platforms
 	@docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t waduphaitian/mural_dev:multi --push .
 
 build:## Build a docker container and tag as mvral
-	@docker build --build-arg BUILD_VERSION=0.4.0 -t waduphaitian/mural_dev:latest .
+	@docker build --build-arg BUILD_VERSION=1.0.0 -t waduphaitian/mural_dev:latest .
 
 run:## Build a docker container and tag as mvral
 # docker run -v <Path to host dir>:/containerFiles -p <host port to use>:42069 -it mvral
@@ -25,3 +25,7 @@ tar:## Build a docker container and tag as mvral
 buildTar:## Build a docker container and tag as mvral
 	@make build
 	@make tar
+
+buildArm:## Build a go executable to arm64 computer
+	@env GOOS=linux GOARCH=arm64 go build -ldflags "-X main.BuildVersion=1.0.0"
+	@tar czf muraldevice.tar.gz muraldevice
