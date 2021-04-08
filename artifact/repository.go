@@ -91,19 +91,41 @@ func (a RepositoryHandler) Delete(artifactReqested DeleteModel) {
 
 // Dbdriver established the connection to our mongo db
 func Dbdriver() *mongo.Client {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://mongo:27017"))
-	if err != nil {
-		log.Fatal(err)
+	var client *mongo.Client
+
+	// Add code to retry multiple times
+	timesToTry := 10
+	isConnected := false
+	for tryAgain := true; tryAgain; tryAgain = !isConnected && timesToTry > 0 {
+		var err error
+		client, err = mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		ctx, _ := context.WithTimeout(context.Background(), 6*time.Second)
+		err = client.Connect(ctx)
+		if err != nil {
+			timesToTry -= 1
+			print("from 1sst\n")
+			log.Print(err)
+			continue
+		}
+
+		err = client.Ping(ctx, readpref.Primary())
+		if err != nil {
+			timesToTry -= 1
+			print("from 2n\n")
+			log.Print(err)
+			continue
+		}
+		isConnected = true
 	}
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	err = client.Connect(ctx)
-	if err != nil {
-		log.Fatal(err)
+
+	if !isConnected {
+		log.Fatal("Unsuccesful in connecting to db. Is mongo up?")
 	}
-	err = client.Ping(ctx, readpref.Primary())
-	if err != nil {
-		log.Fatal(err)
-	}
+
 	db := client.Database("mvral")
 	migrate.SetDatabase(db)
 	if err := migrate.Up(migrate.AllAvailable); err != nil {
